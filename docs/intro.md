@@ -363,3 +363,7 @@ plugins:                           # plugin list (sorted by priority)
   - ...
   - 3rd-party                      # Custom plugin names
 ```
+
+## Unload plugins
+
+TBD
