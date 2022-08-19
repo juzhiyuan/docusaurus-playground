@@ -102,20 +102,6 @@ end
 
 ### Note 4 - Schema
 
-Write [JSON Schema](https://json-schema.org) descriptions and check functions. Similarly, take the example-plugin plugin as an example to see its
-configuration data:
-
-```json
-{
-  "example-plugin": {
-    "i": 1,
-    "s": "s",
-    "t": [1]
-  }
-}
-```
-
-
 At the same time, we need to implement the `check_schema(conf)` method to complete the specification verification.
 
 ```lua
@@ -126,29 +112,6 @@ end
 
 Note: the project has provided the public method `core.schema.check`, which can be used directly to complete JSON
 verification.
-
-In addition, if the plugin needs to use some metadata, we can define the plugin `metadata_schema`, and then we can dynamically manage these metadata through the `admin api`. Example:
-
-```lua
-local metadata_schema = {
-    type = "object",
-    properties = {
-        ikey = {type = "number", minimum = 0},
-        skey = {type = "string"},
-    },
-    required = {"ikey", "skey"},
-}
-
-local plugin_name = "example-plugin"
-
-local _M = {
-    version = 0.1,
-    priority = 0,        -- TODO: add a type field, may be a good idea
-    name = plugin_name,
-    schema = schema,
-    metadata_schema = metadata_schema,
-}
-```
 
 ### Note 5 - Logic
 

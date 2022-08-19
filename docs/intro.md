@@ -176,7 +176,25 @@ We will continue using the [example-plugin](https://github.com/apache/apisix/blo
 
 #### `_M.schema`
 
-The JSONSchema rules saved by the `_M.schema` attribute will be used to verify whether the plugin configuration meets the requirements or not.
+The [JSONSchema](https://github.com/api7/jsonschema) rules saved by the `_M.schema` attribute will be used to verify whether the plugin configuration meets the requirements or not.
+
+:::tip
+
+Not each plugin needs a schema to validate the configuration, it depends on the business requirements.
+
+```lua title="Example Schema"
+local schema = {}
+```
+
+For this kind of plugin, we only need to set empty object in the plugin configuration.
+
+```json title="Example Configuration"
+{
+  "example-plugin": {}
+}
+```
+
+:::
 
 ```lua title="apisix/plugins/example-plugin.lua"
 local schema = {
@@ -224,7 +242,20 @@ Here are 2 valid configuration examples:
 
 #### `_M.metadata_schema`
 
-TBD
+Apache APISIX provides the Plugin Metadata mechanism to store global configuration of plugins, e.g., sensitive key/secret, shared configuration. We could use the [Plugin Metadata API](https://apisix.apache.org/docs/apisix/admin-api/#plugin-metadata) to operate it dynamically.
+
+The `_M.metadata_schema` attribute is similar with the `_M.schema` attribute, we could set some schema rules to validate the [Plugin Metadata API](https://apisix.apache.org/docs/apisix/admin-api/#plugin-metadata)'s request body.
+
+```lua title="apisix/plugins/example-plugin.lua"
+local metadata_schema = {
+  type = "object",
+  properties = {
+    ikey = {type = "number", minimum = 0},
+    skey = {type = "string"},
+  },
+  required = {"ikey", "skey"},
+}
+```
 
 #### `_M.consumer_schema`
 
