@@ -44,28 +44,6 @@ $(INSTALL) -d $(INST_LUADIR)/apisix/plugins/skywalking
 $(INSTALL) apisix/plugins/skywalking/*.lua $(INST_LUADIR)/apisix/plugins/skywalking/
 ```
 
-### Note 3 - Authentication
-
-Note the difference between key-auth's `check_schema(conf)` method to example-plugin's:
-
-```lua
--- key-auth
-function _M.check_schema(conf, schema_type)
-    if schema_type == core.schema.TYPE_CONSUMER then
-        return core.schema.check(consumer_schema, conf)
-    else
-        return core.schema.check(schema, conf)
-    end
-end
-```
-
-```lua
--- example-plugin
-function _M.check_schema(conf, schema_type)
-    return core.schema.check(schema, conf)
-end
-```
-
 ### Note 5 - Logic
 
 Write the logic of the plugin in the corresponding phase. There are two parameters `conf` and `ctx` in the phase method, take the `limit-conn` plugin configuration as an example.
