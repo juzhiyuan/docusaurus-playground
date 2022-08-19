@@ -31,6 +31,8 @@ Let's use the [`example-plugin`](https://github.com/apache/apisix/blob/master/ap
 
 ## Prerequisite
 
+### Dependencies
+
 Before developing a custom plugin, please check if the custom logic has dependencies.
 
 For example, the [`openid-connect`](https://github.com/apache/apisix/blob/master/apisix/plugins/openid-connect.lua) plugin needs `Nginx shared memory` functionality, we have to inject Nginx snippet like the following to make it work as expected:
@@ -42,6 +44,16 @@ nginx_config:
     lua_shared_dict jwks                  1m; # cache for JWKs
     lua_shared_dict introspection        10m; # cache for JWT verification results
 ```
+
+### Lua Language
+
+:::tip
+
+Read [Why Apache APISIX chooses Nginx and Lua to build API Gateway](https://apisix.apache.org/blog/2021/08/25/why-apache-apisix-chose-nginx-and-lua/) to know why.
+
+:::
+
+APISIX uses [Lua](http://www.lua.org/docs.html) to implement [built-in plugins](https://github.com/apache/apisix/tree/master/apisix/plugins), but we can also rely on [Plugin Runner](https://apisix.apache.org/docs/apisix/internal/plugin-runner/) to use [WASM](https://apisix.apache.org/docs/apisix/wasm/), Rust, [Golang](https://apisix.apache.org/docs/go-plugin-runner/getting-started/), [Java](https://apisix.apache.org/docs/java-plugin-runner/development/), [Python](https://apisix.apache.org/docs/python-plugin-runner/getting-started/), and [Node.js](https://github.com/zenozeng/apisix-javascript-plugin-runner) to implement plugins.
 
 ## Structure
 
@@ -149,8 +161,6 @@ If set the `_M.run_policy` field to `prefer_route`, then when we enable the same
 #### `_M.init()` (optional) {#attribute-init}
 
 The `_M.init()` function executes after the plugin is loaded.
-
-The plugin itself provides the init method. It is convenient for plugins to perform some initialization after the plugin is loaded.
 
 #### `_M.destroy()` (optional) {#attribute-destroy}
 
