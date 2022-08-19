@@ -25,9 +25,11 @@ description: Cloud Native API Gateway Apache APISIX supports using Lua, Rust, WA
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Apache APISIX supports using Lua or [other languages](./external-plugin.md) to develop custom plugins, and you can find all built-in plugins [here](https://github.com/apache/apisix/tree/master/apisix/plugins).
+Apache APISIX supports using Lua or [other languages](https://apisix.apache.org/docs/apisix/external-plugin/) to develop custom plugins, and we can find all built-in plugins [here](https://github.com/apache/apisix/tree/master/apisix/plugins).
 
-Let's use the [`example-plugin`](https://github.com/apache/apisix/blob/master/apisix/plugins/example-plugin.lua#L45-L51) plugin to explain the plugin development processes.
+![External Plugin](https://raw.githubusercontent.com/apache/apisix/release/2.15/docs/assets/images/external-plugin.png)
+
+Let's use the [example-plugin](https://github.com/apache/apisix/blob/master/apisix/plugins/example-plugin.lua) plugin to explain how to develop the custom plugin.
 
 ## Prerequisite
 
@@ -35,7 +37,7 @@ Let's use the [`example-plugin`](https://github.com/apache/apisix/blob/master/ap
 
 Before developing a custom plugin, please check if the custom logic has dependencies.
 
-For example, the [`openid-connect`](https://github.com/apache/apisix/blob/master/apisix/plugins/openid-connect.lua) plugin needs `Nginx shared memory` functionality, we have to inject Nginx snippet like the following to make it work as expected:
+For example, the [openid-connect](https://github.com/apache/apisix/blob/master/apisix/plugins/openid-connect.lua) plugin needs `Nginx shared memory` functionality, we have to inject Nginx snippet like the following to make it work as expected:
 
 ```yaml title="conf/config.yaml"
 nginx_config:
@@ -53,7 +55,7 @@ Read [Why Apache APISIX chooses Nginx and Lua to build API Gateway](https://apis
 
 :::
 
-APISIX uses [Lua](http://www.lua.org/docs.html) to implement [built-in plugins](https://github.com/apache/apisix/tree/master/apisix/plugins), but we can also rely on [Plugin Runner](https://apisix.apache.org/docs/apisix/internal/plugin-runner/) to use [WASM](https://apisix.apache.org/docs/apisix/wasm/), Rust, [Golang](https://apisix.apache.org/docs/go-plugin-runner/getting-started/), [Java](https://apisix.apache.org/docs/java-plugin-runner/development/), [Python](https://apisix.apache.org/docs/python-plugin-runner/getting-started/), and [Node.js](https://github.com/zenozeng/apisix-javascript-plugin-runner) to implement plugins.
+APISIX uses the [Lua](http://www.lua.org/docs.html) language to implement [built-in plugins](https://github.com/apache/apisix/tree/master/apisix/plugins), but we can also rely on [Plugin Runner](https://apisix.apache.org/docs/apisix/external-plugin) to use [WASM](https://apisix.apache.org/docs/apisix/wasm/), Rust, [Golang](https://apisix.apache.org/docs/go-plugin-runner/getting-started/), [Java](https://apisix.apache.org/docs/java-plugin-runner/development/), [Python](https://apisix.apache.org/docs/python-plugin-runner/getting-started/), and [Node.js](https://github.com/zenozeng/apisix-javascript-plugin-runner) to implement plugins.
 
 ## Structure
 
@@ -152,11 +154,11 @@ Not all Authentication plugins must have the `_M.type = "auth"` attribute, e.g.,
 
 :::
 
-If the plugin needs to work with `Consumer`, then set the `_M.type` field to `auth`. Please check the built-in `Authentication` plugins for reference, e.g., [`basic-auth`](https://github.com/apache/apisix/blob/master/apisix/plugins/basic-auth.lua#L56), [`key-auth`](https://github.com/apache/apisix/blob/master/apisix/plugins/key-auth.lua#L57), [`jwt-auth`](https://github.com/apache/apisix/blob/master/apisix/plugins/jwt-auth.lua#L125).
+If the plugin needs to work with [Consumer](https://apisix.apache.org/docs/apisix/terminology/consumer/), then set `_M.type = "auth"`. Please check the built-in `Authentication` plugins for reference, e.g., [basic-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/basic-auth.lua#L56), [key-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/key-auth.lua#L57), [jwt-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/jwt-auth.lua#L125).
 
 #### `_M.run_policy` (optional) {#attribute-run_policy}
 
-If set the `_M.run_policy` field to `prefer_route`, then when we enable the same plugin both in the [`Global`](https://apisix.apache.org/docs/apisix/admin-api/#global-rule) level and the `Route` level, only the `Route` level will work.
+If set `_M.run_policy = "prefer_route"`, then when we enable the same plugin both at the [Global](https://apisix.apache.org/docs/apisix/admin-api/#global-rule) level and the `Route` level, only the `Route` level will work.
 
 #### `_M.init()` (optional) {#attribute-init}
 
@@ -164,15 +166,61 @@ The `_M.init()` function executes after the plugin is loaded.
 
 #### `_M.destroy()` (optional) {#attribute-destroy}
 
-TBD
+The `_M.destroy()` function executes after the plugin is unloaded.
 
 ### Schema
 
 APISIX uses the [jsonschema](https://github.com/api7/jsonschema) project to validate JSON documents (e.g., Route Rule Configuration).
 
+We will continue using the [example-plugin](https://github.com/apache/apisix/blob/master/apisix/plugins/example-plugin.lua) plugin to explain this section.
+
 #### `_M.schema`
 
-TBD
+The JSONSchema rules saved by the `_M.schema` attribute will be used to verify whether the plugin configuration meets the requirements or not.
+
+```lua title="apisix/plugins/example-plugin.lua"
+local schema = {
+  type = "object",
+  properties = {
+    i = {type = "number", minimum = 0},
+    s = {type = "string"},
+    t = {type = "array", minItems = 1},
+    ip = {type = "string"},
+    port = {type = "integer"},
+  },
+  required = {"i"},
+}
+```
+
+The `schema.properties` attribute shows that this plugin has 5 properties:
+
+1. `i`: This property is a **Number**, and its minimum is **0**.
+2. `s`: This property is a **String**.
+3. `t`: This property is an **Array**, and it must contain at least **1** iterm.
+4. `ip`: This property is a **String**.
+5. `port`: This property is an **Integer**.
+
+The `schema.required` attribute shows that this plugin must contain the **i** property in the configuration data.
+
+Here are 2 valid configuration examples:
+
+```json title="Example 1"
+{
+  "example-plugin": {
+    "i": 1,
+    "s": "s",
+    "t": [1]
+  }
+}
+```
+
+```json title="Example 2"
+{
+  "example-plugin": {
+    "i": 1
+  }
+}
+```
 
 #### `_M.metadata_schema`
 
@@ -351,7 +399,7 @@ apisix:
 </TabItem>
 <TabItem value="update-source-codes" label="Update source codes">
 
-1. Open the [`path/to/apisix/plugins`](https://github.com/apache/apisix/blob/master/apisix/plugins) directory, edit a built-in plugin or add a new plugin.
+1. Open the [path/to/apisix/plugins](https://github.com/apache/apisix/blob/master/apisix/plugins) directory, edit a built-in plugin or add a new plugin.
 2. For example, add the `3rd-party` plugin:
 
 ```

@@ -115,23 +115,6 @@ configuration data:
 }
 ```
 
-Let's look at its schema description :
-
-```lua
-local schema = {
-    type = "object",
-    properties = {
-        i = {type = "number", minimum = 0},
-        s = {type = "string"},
-        t = {type = "array", minItems = 1},
-        ip = {type = "string"},
-        port = {type = "integer"},
-    },
-    required = {"i"},
-}
-```
-
-The schema defines a non-negative number `i`, a string `s`, a non-empty array of `t`, and `ip` / `port`. Only `i` is required.
 
 At the same time, we need to implement the `check_schema(conf)` method to complete the specification verification.
 
