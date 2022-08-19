@@ -46,40 +46,6 @@ $(INSTALL) apisix/plugins/skywalking/*.lua $(INST_LUADIR)/apisix/plugins/skywalk
 
 ### Note 3 - Authentication
 
-You might have noticed the key-auth plugin has `type = 'auth'` in its definition.
-When we set the type of plugin to `auth`, it means that this plugin is an authentication plugin.
-
-An authentication plugin needs to choose a consumer after execution. For example, in key-auth plugin, it calls the `consumer.attach_consumer` to attach a consumer, which is chosen via the `apikey` header.
-
-To interact with the `consumer` resource, this type of plugin needs to provide a `consumer_schema` to check the `plugins` configuration in the `consumer`.
-
-Here is the consumer configuration for key-auth plugin:
-
-```json
-{
-  "username": "Joe",
-  "plugins": {
-    "key-auth": {
-      "key": "Joe's key"
-    }
-  }
-}
-```
-
-It will be used when you try to create a [Consumer](https://github.com/apache/apisix/blob/master/docs/en/latest/admin-api.md#consumer)
-
-To validate the configuration, the plugin uses a schema like this:
-
-```lua
-local consumer_schema = {
-    type = "object",
-    properties = {
-        key = {type = "string"},
-    },
-    required = {"key"},
-}
-```
-
 Note the difference between key-auth's `check_schema(conf)` method to example-plugin's:
 
 ```lua
@@ -99,19 +65,6 @@ function _M.check_schema(conf, schema_type)
     return core.schema.check(schema, conf)
 end
 ```
-
-### Note 4 - Schema
-
-At the same time, we need to implement the `check_schema(conf)` method to complete the specification verification.
-
-```lua
-function _M.check_schema(conf, schema_type)
-    return core.schema.check(schema, conf)
-end
-```
-
-Note: the project has provided the public method `core.schema.check`, which can be used directly to complete JSON
-verification.
 
 ### Note 5 - Logic
 

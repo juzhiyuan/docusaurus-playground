@@ -146,15 +146,16 @@ When setting the priority, in order to avoid unexpected cases caused by prioriti
 
 #### `_M.type` (optional) {#attribute-type}
 
-:::note
+:::tip
 
 <!-- TODO: depends on what? -->
 
-Not all Authentication plugins must have the `_M.type = "auth"` attribute, e.g., [authz-keycloak](https://github.com/apache/apisix/blob/master/apisix/plugins/authz-keycloak.lua).
+1. Not all Authentication plugins must have the `_M.type = "auth"` attribute, e.g., [authz-keycloak](https://github.com/apache/apisix/blob/master/apisix/plugins/authz-keycloak.lua).
+2. Don't forget to work with the [\_M.consumer_schema](#consumer_schema) attribute.
 
 :::
 
-If the plugin needs to work with [Consumer](https://apisix.apache.org/docs/apisix/terminology/consumer/), then set `_M.type = "auth"`. Please check the built-in `Authentication` plugins for reference, e.g., [basic-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/basic-auth.lua#L56), [key-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/key-auth.lua#L57), [jwt-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/jwt-auth.lua#L125).
+Please check the built-in `Authentication` plugins for reference, e.g., [basic-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/basic-auth.lua#L56), [key-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/key-auth.lua#L57), [jwt-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/jwt-auth.lua#L125).
 
 #### `_M.run_policy` (optional) {#attribute-run_policy}
 
@@ -174,7 +175,7 @@ APISIX uses the [jsonschema](https://github.com/api7/jsonschema) project to vali
 
 We will continue using the [example-plugin](https://github.com/apache/apisix/blob/master/apisix/plugins/example-plugin.lua) plugin to explain this section.
 
-#### `_M.schema`
+#### `_M.schema` {#attribute-schema}
 
 The [JSONSchema](https://github.com/api7/jsonschema) rules saved by the `_M.schema` attribute will be used to verify whether the plugin configuration meets the requirements or not.
 
@@ -240,7 +241,7 @@ Here are 2 valid configuration examples:
 }
 ```
 
-#### `_M.metadata_schema`
+#### `_M.metadata_schema` {#metadata_schema}
 
 Apache APISIX provides the Plugin Metadata mechanism to store global configuration of plugins, e.g., sensitive key/secret, shared configuration. We could use the [Plugin Metadata API](https://apisix.apache.org/docs/apisix/admin-api/#plugin-metadata) to operate it dynamically.
 
@@ -257,11 +258,17 @@ local metadata_schema = {
 }
 ```
 
-#### `_M.consumer_schema`
+#### `_M.consumer_schema` {#consumer_schema}
 
 Apache APISIX provides the [Consumer](https://apisix.apache.org/docs/apisix/terminology/consumer/) entity to bind with a human, a 3rd party service or a client, because they consume services managed by APISIX.
 
 Usually, we will use the `_M.consumer_schema` field in **Authentication** plugins, e.g., [basic-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/basic-auth.lua), [jwt-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/jwt-auth.lua), [key-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/key-auth.lua).
+
+:::tip
+
+Don't forget to work with the [\_M.type](#attribute-type) attribute.
+
+:::
 
 ```lua title="apisix/plugins/basic-auth.lua"
 local consumer_schema = {
@@ -275,9 +282,54 @@ local consumer_schema = {
 }
 ```
 
-#### `_M.check_schema()`
+```json title="Create a Consumer with the basic-auth plugin"
+curl http://127.0.0.1:9080/apisix/admin/consumers -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
+{
+  "username": "foo",
+  "plugins": {
+    "basic-auth": {
+      "username": "foo",
+      "password": "bar"
+    }
+  }
+}'
+```
 
-TBD
+#### `_M.check_schema()` {#check_schema}
+
+After setting the [\_M.schema](#attribute-schema) attribute, the [\_M.metadata_schema](#metadata_schema) attribute (optional), and the [\_M.consumer_schema](#consumer_schema) attribute (optional), we need to use the `_M.check_schema` function to validate configurations.
+
+:::tip
+
+We could visit [all built-in plugins](https://github.com/apache/apisix/blob/master/apisix/plugins) for reference.
+
+:::
+
+Apache APISIX provides a public validate function [core.schema.check](https://github.com/apache/apisix/blob/master/apisix/core/schema.lua#L59), usually the `_M.check_schema` function has three kinds of implementations:
+
+```lua title="Example: Normal Plugin"
+function _M.check_schema(conf, schema_type)
+  return core.schema.check(schema, conf)
+end
+```
+
+```lua title="Example: Metadata Plugin"
+function _M.check_schema(conf, schema_type)
+  if schema_type == core.schema.TYPE_METADATA then
+    return core.schema.check(metadata_schema, conf)
+  end
+  return core.schema.check(schema, conf)
+end
+```
+
+```lua title="Example: Authentication plugin"
+function _M.check_schema(conf, schema_type)
+  if schema_type == core.schema.TYPE_CONSUMER then
+    return core.schema.check(consumer_schema, conf)
+  end
+  return core.schema.check(schema, conf)
+end
+```
 
 ### Execution Phases
 
