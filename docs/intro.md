@@ -110,25 +110,27 @@ return _M
 
 ### Basic
 
-#### `_M.name`
+#### `_M.name` {#attribute-name}
 
-All plugins should use a unique name.
+The custom plugin's name, all plugins should **pick a unique name**.
 
-#### `_M.version`
+#### `_M.version` {#attribute-version}
 
-TBD
+The custom plugin's version, APISIX's built-in plugins use `0.1` as version currently.
 
-#### `_M.priority`
+#### `_M.priority` {#attribute-priority}
 
-All plugins should use a unique priority, please check `conf/config-default.yaml` to get all plugins' priority.
+Each plugin should pick a unique priority, please check the `conf/config-default.yaml` file to get all plugins' priority.
 
-As shown in the example code above in this guide, a plugin can perform different actions at different phases of the request/response. When different plugins perform actions in the same phase, the plugin with higher priority will be executed first.
+:::tip
+
+As shown in the example above, the plugin can perform different actions at different execution phases. When different plugins perform actions in the same phase, the plugin with higher priority will be executed first.
+
+:::
 
 When setting the priority, in order to avoid unexpected cases caused by prioritizing the execution of built-in plugins, it is recommended to set the priority range from `1 to 99`.
 
-#### `_M.type`
-
-This field is optional, please omit this field when there is no need.
+#### `_M.type` (optional) {#attribute-type}
 
 :::note
 
@@ -140,13 +142,23 @@ Not all Authentication plugins must have the `_M.type = "auth"` attribute, e.g.,
 
 If the plugin needs to work with `Consumer`, then set the `_M.type` field to `auth`. Please check the built-in `Authentication` plugins for reference, e.g., [`basic-auth`](https://github.com/apache/apisix/blob/master/apisix/plugins/basic-auth.lua#L56), [`key-auth`](https://github.com/apache/apisix/blob/master/apisix/plugins/key-auth.lua#L57), [`jwt-auth`](https://github.com/apache/apisix/blob/master/apisix/plugins/jwt-auth.lua#L125).
 
-#### `_M.run_policy`
-
-This field is optional, please omit this field when there is no need.
+#### `_M.run_policy` (optional) {#attribute-run_policy}
 
 If set the `_M.run_policy` field to `prefer_route`, then when we enable the same plugin both in the [`Global`](https://apisix.apache.org/docs/apisix/admin-api/#global-rule) level and the `Route` level, only the `Route` level will work.
 
+#### `_M.init()` (optional) {#attribute-init}
+
+The `_M.init()` function executes after the plugin is loaded.
+
+The plugin itself provides the init method. It is convenient for plugins to perform some initialization after the plugin is loaded.
+
+#### `_M.destroy()` (optional) {#attribute-destroy}
+
+TBD
+
 ### Schema
+
+APISIX uses the [jsonschema](https://github.com/api7/jsonschema) project to validate JSON documents (e.g., Route Rule Configuration).
 
 #### `_M.schema`
 
@@ -156,11 +168,17 @@ TBD
 
 TBD
 
+#### `_M.consumer_schema`
+
+TBD
+
 #### `_M.check_schema()`
 
 TBD
 
 ### Execution Phases
+
+![OpenResty-Execution-Phases](https://moonbingbing.gitbooks.io/openresty-best-practices/content/images/openresty_phases.png)
 
 Determine which phase to run, generally access or rewrite. If you don't know the [OpenResty lifecycle](https://github.com/openresty/lua-nginx-module/blob/master/README.markdown#directives), it's
 recommended to know it in advance. For example key-auth is an authentication plugin, thus the authentication should be completed
