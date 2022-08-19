@@ -244,7 +244,7 @@ Here are 2 valid configuration examples:
 
 Apache APISIX provides the Plugin Metadata mechanism to store global configuration of plugins, e.g., sensitive key/secret, shared configuration. We could use the [Plugin Metadata API](https://apisix.apache.org/docs/apisix/admin-api/#plugin-metadata) to operate it dynamically.
 
-The `_M.metadata_schema` attribute is similar with the `_M.schema` attribute, we could set some schema rules to validate the [Plugin Metadata API](https://apisix.apache.org/docs/apisix/admin-api/#plugin-metadata)'s request body.
+The `_M.metadata_schema` attribute is similar with the `_M.schema` attribute, we could set schema rules to validate the [Plugin Metadata API](https://apisix.apache.org/docs/apisix/admin-api/#plugin-metadata)'s request body.
 
 ```lua title="apisix/plugins/example-plugin.lua"
 local metadata_schema = {
@@ -259,7 +259,21 @@ local metadata_schema = {
 
 #### `_M.consumer_schema`
 
-TBD
+Apache APISIX provides the [Consumer](https://apisix.apache.org/docs/apisix/terminology/consumer/) entity to bind with a human, a 3rd party service or a client, because they consume services managed by APISIX.
+
+Usually, we will use the `_M.consumer_schema` field in **Authentication** plugins, e.g., [basic-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/basic-auth.lua), [jwt-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/jwt-auth.lua), [key-auth](https://github.com/apache/apisix/blob/master/apisix/plugins/key-auth.lua).
+
+```lua title="apisix/plugins/basic-auth.lua"
+local consumer_schema = {
+  type = "object",
+  title = "work with consumer object",
+  properties = {
+    username = { type = "string" },
+    password = { type = "string" },
+  },
+  required = {"username", "password"},
+}
+```
 
 #### `_M.check_schema()`
 
