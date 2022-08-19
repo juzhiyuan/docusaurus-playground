@@ -108,15 +108,17 @@ return _M
 
 ## Attributes
 
-### `_M.name`
+### Basic
+
+#### `_M.name`
 
 All plugins should use a unique name.
 
-### `_M.version`
+#### `_M.version`
 
 TBD
 
-### `_M.priority`
+#### `_M.priority`
 
 All plugins should use a unique priority, please check `conf/config-default.yaml` to get all plugins' priority.
 
@@ -124,15 +126,7 @@ As shown in the example code above in this guide, a plugin can perform different
 
 When setting the priority, in order to avoid unexpected cases caused by prioritizing the execution of built-in plugins, it is recommended to set the priority range from `1 to 99`.
 
-### `_M.schema`
-
-TBD
-
-### `_M.metadata_schema`
-
-TBD
-
-### `_M.type`
+#### `_M.type`
 
 This field is optional, please omit this field when there is no need.
 
@@ -146,13 +140,27 @@ Not all Authentication plugins must have the `_M.type = "auth"` attribute, e.g.,
 
 If the plugin needs to work with `Consumer`, then set the `_M.type` field to `auth`. Please check the built-in `Authentication` plugins for reference, e.g., [`basic-auth`](https://github.com/apache/apisix/blob/master/apisix/plugins/basic-auth.lua#L56), [`key-auth`](https://github.com/apache/apisix/blob/master/apisix/plugins/key-auth.lua#L57), [`jwt-auth`](https://github.com/apache/apisix/blob/master/apisix/plugins/jwt-auth.lua#L125).
 
-### `_M.run_policy`
+#### `_M.run_policy`
 
 This field is optional, please omit this field when there is no need.
 
 If set the `_M.run_policy` field to `prefer_route`, then when we enable the same plugin both in the [`Global`](https://apisix.apache.org/docs/apisix/admin-api/#global-rule) level and the `Route` level, only the `Route` level will work.
 
-## Execution Phases
+### Schema
+
+#### `_M.schema`
+
+TBD
+
+#### `_M.metadata_schema`
+
+TBD
+
+#### `_M.check_schema()`
+
+TBD
+
+### Execution Phases
 
 Determine which phase to run, generally access or rewrite. If you don't know the [OpenResty lifecycle](https://github.com/openresty/lua-nginx-module/blob/master/README.markdown#directives), it's
 recommended to know it in advance. For example key-auth is an authentication plugin, thus the authentication should be completed
@@ -171,19 +179,19 @@ end
 We can't invoke `ngx.exit`, `ngx.redirect` or `core.respond.exit` in rewrite phase and access phase. if need to exit, just return the status and body, the plugin engine will make the exit happen with the returned status and body. [example](https://github.com/apache/apisix/blob/35269581e21473e1a27b11cceca6f773cad0192a/apisix/plugins/limit-count.lua#L177)
 :::
 
-### `_M.rewrite`
+#### `_M.rewrite`
 
 TBD
 
-### `_M.access`
+#### `_M.access`
 
 TBD
 
-### `_M.body_filter`
+#### `_M.body_filter`
 
 TBD
 
-### `_M.delayed_body_filter`
+#### `_M.delayed_body_filter`
 
 Besides OpenResty's phases, we also provide extra phases to satisfy specific purpose:
 
@@ -196,21 +204,7 @@ function _M.delayed_body_filter(conf, ctx)
 end
 ```
 
-## Schema
-
-### `schema`
-
-TBD
-
-### `metadata_schema`
-
-TBD
-
-### `_M.check_schema()`
-
-TBD
-
-## Logic
+## Logics
 
 TBD
 
@@ -298,7 +292,9 @@ Note that the custom variables can't be used in features that depend on the Ngin
 
 TBD
 
-## Load plugins
+## Usage
+
+### Load plugins
 
 Apache APISIX's built-in plugins are under the `path/to/apisix/plugins` directory, and it supports two ways to load custom plugins.
 
@@ -345,7 +341,7 @@ apisix:
 </TabItem>
 </Tabs>
 
-## Enable plugins
+### Enable plugins
 
 <!-- TODO: check all reload/restart APISIX text's description; How? -->
 
@@ -364,6 +360,10 @@ plugins:                           # plugin list (sorted by priority)
   - 3rd-party                      # Custom plugin names
 ```
 
-## Unload plugins
+### Disable plugins
+
+TBD
+
+### Unload plugins
 
 TBD
